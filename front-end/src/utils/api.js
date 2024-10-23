@@ -1,6 +1,6 @@
 /**
  * Defines the base URL for the API.
- * The default values is overridden by the `API_BASE_URL` environment variable.
+ * The default values are overridden by the `API_BASE_URL` environment variable.
  */
 import formatReservationDate from "./format-reservation-date";
 import formatReservationTime from "./format-reservation-date";
@@ -22,7 +22,7 @@ headers.append("Content-Type", "application/json");
  * @param url
  *  the url for the request.
  * @param options
- *  any options for fetch
+ *  any options for fetch.
  * @param onCancel
  *  value to return if fetch call is aborted. Default value is undefined.
  * @returns {Promise<Error|any>}
@@ -92,11 +92,67 @@ export async function createReservation(reservation, signal) {
 }
 
 /**
- * Retrieves all tables from the database.
+ * Fetches a reservation by its ID.
+ * @param reservation_id
+ *  the reservation ID.
+ * @param signal
+ *  optional AbortSignal to cancel the request.
+ * @returns {Promise<reservation>}
+ *  a promise that resolves to the saved reservation data.
+ */
+export async function readReservation(reservation_id, signal) {
+  const url = `${API_BASE_URL}/reservations/${reservation_id}`;
+  return await fetchJson(url, { headers, signal }, {});
+}
+
+/**
+ * Updates an existing reservation.
+ * @param reservation
+ *  the reservation data to be updated in the database.
+ * @param signal
+ *  optional AbortSignal to cancel the request.
+ * @returns {Promise<reservation>}
+ *  a promise that resolves to the updated reservation data.
+ */
+export async function updateReservation(reservation, signal) {
+  const url = `${API_BASE_URL}/reservations/${reservation.reservation_id}`;
+  const options = {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({ data: reservation }),
+    signal,
+  };
+  return await fetchJson(url, options);
+}
+
+/**
+ * Updates the status of an existing reservation.
+ * @param reservation_id
+ *  the reservation ID.
+ * @param status
+ *  the new status for the reservation (e.g., "booked", "seated", "finished", "cancelled").
+ * @param signal
+ *  optional AbortSignal to cancel the request.
+ * @returns {Promise<reservation>}
+ *  a promise that resolves to the updated reservation data.
+ */
+export async function updateReservationStatus(reservation_id, status, signal) {
+  const url = `${API_BASE_URL}/reservations/${reservation_id}/status`;
+  const options = {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({ data: { status } }),
+    signal,
+  };
+  return await fetchJson(url, options);
+}
+
+/**
+ * Retrieves all existing tables.
  * @param signal
  *  optional AbortSignal to cancel the request.
  * @returns {Promise<[table]>}
- *  a promise that resolves to a possibly empty array of tables.
+ *  a promise that resolves to a possibly empty array of tables saved in the database.
  */
 export async function listTables(signal) {
   const url = `${API_BASE_URL}/tables`;
@@ -104,15 +160,35 @@ export async function listTables(signal) {
 }
 
 /**
- * Seats a reservation at a specified table.
- * @param table_id
- *  the ID of the table where the reservation will be seated.
- * @param reservation_id
- *  the ID of the reservation being seated.
+ * Creates a new table.
+ * @param table
+ *  the table data to be saved in the database.
  * @param signal
  *  optional AbortSignal to cancel the request.
- * @returns {Promise<null>}
- *  a promise that resolves to null or an error if the operation fails.
+ * @returns {Promise<table>}
+ *  a promise that resolves to the saved table data.
+ */
+export async function createTable(table, signal) {
+  const url = `${API_BASE_URL}/tables`;
+  const options = {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ data: table }),
+    signal,
+  };
+  return await fetchJson(url, options);
+}
+
+/**
+ * Seats a reservation at a specific table.
+ * @param table_id
+ *  the table ID.
+ * @param reservation_id
+ *  the reservation ID.
+ * @param signal
+ *  optional AbortSignal to cancel the request.
+ * @returns {Promise<table>}
+ *  a promise that resolves to the updated table data.
  */
 export async function seatReservation(table_id, reservation_id, signal) {
   const url = `${API_BASE_URL}/tables/${table_id}/seat`;
@@ -123,4 +199,34 @@ export async function seatReservation(table_id, reservation_id, signal) {
     signal,
   };
   return await fetchJson(url, options);
+}
+
+/**
+ * Finishes a table by removing its seated reservation.
+ * @param table_id
+ *  the table ID.
+ * @param signal
+ *  optional AbortSignal to cancel the request.
+ * @returns {Promise<void>}
+ *  a promise that resolves when the table is cleared.
+ */
+export async function finishTable(table_id, signal) {
+  const url = `${API_BASE_URL}/tables/${table_id}/seat`;
+  const options = { method: "DELETE", headers, signal };
+  return await fetchJson(url, options);
+}
+
+/**
+ * Searches for reservations by mobile number.
+ * @param mobile_number
+ *  the mobile number to search for.
+ * @param signal
+ *  optional AbortSignal to cancel the request.
+ * @returns {Promise<[reservation]>}
+ *  a promise that resolves to a possibly empty array of reservations matching the mobile number.
+ */
+export async function searchReservations(mobile_number, signal) {
+  const url = new URL(`${API_BASE_URL}/reservations`);
+  url.searchParams.append("mobile_number", mobile_number);
+  return await fetchJson(url, { headers, signal }, []);
 }
