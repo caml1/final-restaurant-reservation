@@ -5,6 +5,12 @@ exports.seed = function (knex) {
   return knex.raw("TRUNCATE TABLE reservations RESTART IDENTITY CASCADE")
     .then(function () {
       // Inserts seed entries
-      return knex("reservations").insert(reservations);
+      return knex("reservations").insert(
+        reservations.map(reservation => ({
+          ...reservation,
+          created_at: new Date(),
+          updated_at: new Date(),
+        }))
+      );
     });
 };

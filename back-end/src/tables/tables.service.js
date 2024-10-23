@@ -3,7 +3,7 @@ const knex = require("../db/connection");
 function listByDate(date) {
   return knex("reservations")
     .where({ reservation_date: date })
-    .whereNot({ status: "finished" }) // Do not include finished reservations
+    .whereNot({ status: "finished" }) // Filter out finished reservations
     .orderBy("reservation_time");
 }
 
@@ -15,10 +15,7 @@ function create(newReservation) {
 }
 
 function read(reservation_id) {
-  return knex("reservations")
-    .select("*")
-    .where({ reservation_id })
-    .first();
+  return knex("reservations").where({ reservation_id }).first();
 }
 
 function updateStatus(reservation_id, status) {
@@ -29,7 +26,7 @@ function updateStatus(reservation_id, status) {
     .then((updatedRecords) => updatedRecords[0]);
 }
 
-function searchByMobileNumber(mobile_number) {
+function searchByPhoneNumber(mobile_number) {
   return knex("reservations")
     .whereRaw(
       "translate(mobile_number, '() -', '') like ?",
@@ -38,9 +35,9 @@ function searchByMobileNumber(mobile_number) {
     .orderBy("reservation_date");
 }
 
-function update(reservation_id, updatedReservation) {
+function updateReservation(updatedReservation) {
   return knex("reservations")
-    .where({ reservation_id })
+    .where({ reservation_id: updatedReservation.reservation_id })
     .update(updatedReservation)
     .returning("*")
     .then((updatedRecords) => updatedRecords[0]);
@@ -51,6 +48,6 @@ module.exports = {
   create,
   read,
   updateStatus,
-  update,
-  searchByMobileNumber,
+  searchByPhoneNumber,
+  updateReservation,
 };

@@ -1,60 +1,57 @@
-const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
 const service = require("./reservations.service");
-const hasProperties = require("../errors/hasProperties");
+const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
 
-// List of required fields for a reservation
-const REQUIRED_PROPERTIES = [
-  "first_name",
-  "last_name",
-  "mobile_number",
-  "reservation_date",
-  "reservation_time",
-  "people",
-];
+async function list(req, res, next) {
+  const { date, mobile_number } = req.query;
 
-// Middleware to check that all required properties are present
-const hasRequiredProperties = hasProperties(...REQUIRED_PROPERTIES);
+  if (mobile_number) {
+    const data = await service.searchByMobileNumber(mobile_number);
+    return res.json({ data });
+  }
 
-async function list(req, res) {
-  const { date } = req.query;
   const data = await service.listByDate(date);
   res.json({ data });
 }
 
-async function create(req, res) {
-  const { data } = req.body;
-
-  // Validation: Ensure "people" is a number and greater than 0
-  if (typeof data.people !== "number" || data.people < 1) {
-    return res.status(400).json({ error: "people must be a number greater than 0" });
-  }
-
-  // Validation: Ensure reservation_date is a valid date
-  if (isNaN(Date.parse(data.reservation_date))) {
-    return res.status(400).json({ error: "reservation_date must be a valid date" });
-  }
-
-  // Validation: Ensure reservation_time is in valid time format (HH:MM)
-  const timeFormat = /^([0-1]\d|2[0-3]):([0-5]\d)$/;
-  if (!timeFormat.test(data.reservation_time)) {
-    return res.status(400).json({ error: "reservation_time must be a valid time in HH:MM format" });
-  }
-
-  const newReservation = await service.create(data);
-  res.status(201).json({ data: newReservation });
+async function create(req, res, next) {
+  const data = await service.create(req.body.data);
+  res.status(201).json({ data });
 }
 
-async function read(req, res) {
+async function read(req, res, next) {
   const { reservation_id } = req.params;
-  const reservation = await service.read(reservation_id);
-  if (!reservation) {
-    return res.status(404).json({ error: `Reservation ID ${reservation_id} not found` });
+  const data = await service.read(reservation_id);
+
+  if (!data) {
+    return next({ status: 404, message: `Reservation ID ${reservation_id} not found` });
   }
-  res.json({ data: reservation });
+  
+  res.status(200).json({ data });
+}
+
+async function updateStatus(req, res, next) {
+  const { reservation_id } = req.params;
+  const { status } = req.body.data;
+
+  const validStatuses = ["booked", "seated", "finished", "cancelled"];
+  if (!validStatuses.includes(status)) {
+    return next({ status: 400, message: `Invalid status: ${status}` });
+  }
+
+  const updatedReservation = await service.updateStatus(reservation_id, status);
+  res.status(200).json({ data: updatedReservation });
+}
+
+async function update(req, res, next) {
+  const { reservation_id } = req.params;
+  const updatedReservation = await service.update(reservation_id, req.body.data);
+  res.status(200).json({ data: updatedReservation });
 }
 
 module.exports = {
   list: asyncErrorBoundary(list),
-  create: [hasRequiredProperties, asyncErrorBoundary(create)],
+  create: asyncErrorBoundary(create),
   read: asyncErrorBoundary(read),
+  updateStatus: asyncErrorBoundary(updateStatus),
+  update: asyncErrorBoundary(update),
 };
