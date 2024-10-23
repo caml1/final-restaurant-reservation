@@ -20,7 +20,7 @@ headers.append("Content-Type", "application/json");
  * This function is NOT exported because it is not needed outside of this file.
  *
  * @param url
- *  the url for the requst.
+ *  the url for the request.
  * @param options
  *  any options for fetch
  * @param onCancel
@@ -86,6 +86,40 @@ export async function createReservation(reservation, signal) {
     method: "POST",
     headers,
     body: JSON.stringify({ data: reservation }),
+    signal,
+  };
+  return await fetchJson(url, options);
+}
+
+/**
+ * Retrieves all tables from the database.
+ * @param signal
+ *  optional AbortSignal to cancel the request.
+ * @returns {Promise<[table]>}
+ *  a promise that resolves to a possibly empty array of tables.
+ */
+export async function listTables(signal) {
+  const url = `${API_BASE_URL}/tables`;
+  return await fetchJson(url, { headers, signal }, []);
+}
+
+/**
+ * Seats a reservation at a specified table.
+ * @param table_id
+ *  the ID of the table where the reservation will be seated.
+ * @param reservation_id
+ *  the ID of the reservation being seated.
+ * @param signal
+ *  optional AbortSignal to cancel the request.
+ * @returns {Promise<null>}
+ *  a promise that resolves to null or an error if the operation fails.
+ */
+export async function seatReservation(table_id, reservation_id, signal) {
+  const url = `${API_BASE_URL}/tables/${table_id}/seat`;
+  const options = {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({ data: { reservation_id } }),
     signal,
   };
   return await fetchJson(url, options);
