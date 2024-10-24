@@ -36,16 +36,16 @@ function hasRequiredFields(req, res, next) {
 
   const reservationDate = new Date(`${data.reservation_date}T${data.reservation_time}`);
   if (isNaN(reservationDate.getTime())) {
+    if (!/^\d{2}:\d{2}$/.test(data.reservation_time)) {
+      return next({
+        status: 400,
+        message: "Field 'reservation_time' must be a valid time.",
+      });
+    }
+
     return next({
       status: 400,
       message: "Field 'reservation_date' must be a valid date.",
-    });
-  }
-
-  if (!/^\d{2}:\d{2}$/.test(data.reservation_time)) {
-    return next({
-      status: 400,
-      message: "Field 'reservation_time' must be in HH:MM format.",
     });
   }
 
@@ -79,8 +79,16 @@ function isReservationDateValid(req, res, next) {
 // Middleware to validate reservation time (must be within business hours)
 function hasValidTime(req, res, next) {
   const { reservation_time } = req.body.data;
+  if (!/^\d{2}:\d{2}$/.test(reservation_time)) {
+    return next({
+      status: 400,
+      message: "Field 'reservation_time' must be in HH:MM format.",
+    });
+  }
+
   const [hour, minute] = reservation_time.split(":").map(Number);
 
+  // Validating restaurant operating hours (10:00 AM to 9:30 PM)
   if (hour < 10 || hour > 21 || (hour === 21 && minute > 30)) {
     return next({
       status: 400,
@@ -160,14 +168,19 @@ async function updateStatus(req, res, next) {
 }
 
 // List reservations by date or mobile number (for search functionality)
-async function list(req, res) {
+async function list(req, res, next) {
   const { date, mobile_number } = req.query;
 
   let data;
   if (mobile_number) {
     data = await service.search(mobile_number);
-  } else {
+  } else if (date) {
     data = await service.listByDate(date);
+  } else {
+    return next({
+      status: 400,
+      message: "Either 'date' or 'mobile_number' must be provided for listing reservations.",
+    });
   }
 
   res.json({ data });
