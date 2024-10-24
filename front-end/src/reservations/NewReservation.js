@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import { createReservation } from "../utils/api";
-import ErrorAlert from "../layout/ErrorAlert"; 
+import ErrorAlert from "../layout/ErrorAlert";
 
 function NewReservation() {
   const [formData, setFormData] = useState({
@@ -25,8 +25,17 @@ function NewReservation() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setReservationError(null);
+
+    const today = new Date();
+    const selectedDate = new Date(`${formData.reservation_date}T${formData.reservation_time}`);
+
+    if (selectedDate < today) {
+      setReservationError({ message: "Reservation date must be in the future." });
+      return;
+    }
+
     try {
-      await createReservation(formData); // API call to create reservation
+      await createReservation(formData); 
       history.push(`/dashboard?date=${formData.reservation_date}`);
     } catch (error) {
       setReservationError(error);
@@ -37,7 +46,6 @@ function NewReservation() {
     <main>
       <h1>Create New Reservation</h1>
       
-      {/* Display error message if present */}
       {reservationError && (
         <div className="alert alert-danger">
           <ErrorAlert error={reservationError} />
@@ -45,7 +53,6 @@ function NewReservation() {
       )}
 
       <form onSubmit={handleSubmit}>
-        {/* Reservation form fields */}
         <label htmlFor="first_name">First Name</label>
         <input
           name="first_name"

@@ -1,39 +1,43 @@
 import React, { useState } from "react";
-import { listReservations } from "../utils/api";
+import { searchReservations } from "../utils/api";
 import ErrorAlert from "../layout/ErrorAlert";
 
 function Search() {
-  const [mobileNumber, setMobileNumber] = useState("");
-  const [reservations, setReservations] = useState([]);
-  const [searchError, setSearchError] = useState(null);
+  const [mobileNumber, setMobileNumber] = useState(""); // User input for phone number
+  const [reservations, setReservations] = useState([]); // Search results
+  const [searchError, setSearchError] = useState(null); // Error handling
 
   const handleSearch = async (event) => {
     event.preventDefault();
-    const abortController = new AbortController();
     setSearchError(null);
+
     try {
-      const data = await listReservations({ mobile_number: mobileNumber }, abortController.signal);
-      setReservations(data);
+      const data = await searchReservations(mobileNumber); // API call to search reservations
+      setReservations(data); // Set reservations list with search results
     } catch (error) {
-      setSearchError(error);
+      setSearchError(error); // Handle search errors
     }
-    return () => abortController.abort();
   };
 
   return (
     <main>
-      <h1>Search</h1>
+      <h1>Search Reservations</h1>
       <form onSubmit={handleSearch}>
+        <label htmlFor="mobile_number">Mobile Number:</label>
         <input
+          id="mobile_number"
           name="mobile_number"
           type="text"
-          placeholder="Enter a customer's phone number"
+          placeholder="Enter a phone number"
           value={mobileNumber}
           onChange={(event) => setMobileNumber(event.target.value)}
+          required
         />
         <button type="submit">Find</button>
       </form>
+
       <ErrorAlert error={searchError} />
+
       {reservations.length > 0 ? (
         reservations.map((reservation) => (
           <div key={reservation.reservation_id}>

@@ -1,66 +1,30 @@
-/**
- * Defines the base URL for the API.
- * The default values are overridden by the `API_BASE_URL` environment variable.
- */
 import formatReservationDate from "./format-reservation-date";
-import formatReservationTime from "./format-reservation-date";
+import formatReservationTime from "./format-reservation-time";
 
-const API_BASE_URL =
-  process.env.REACT_APP_API_BASE_URL || "http://localhost:5001";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5001";
 
-/**
- * Defines the default headers for these functions to work with `json-server`
- */
+// Default headers for the API requests
 const headers = new Headers();
 headers.append("Content-Type", "application/json");
 
-/**
- * Fetch `json` from the specified URL and handle error status codes and ignore `AbortError`s
- *
- * This function is NOT exported because it is not needed outside of this file.
- *
- * @param url
- *  the url for the request.
- * @param options
- *  any options for fetch.
- * @param onCancel
- *  value to return if fetch call is aborted. Default value is undefined.
- * @returns {Promise<Error|any>}
- *  a promise that resolves to the `json` data or an error.
- *  If the response is not in the 200 - 399 range the promise is rejected.
- */
+// Function to handle fetching JSON data and errors
 async function fetchJson(url, options, onCancel) {
   try {
     const response = await fetch(url, options);
 
-    if (response.status === 204) {
-      return null;
-    }
+    if (response.status === 204) return null; // No content to return
 
     const payload = await response.json();
 
-    if (payload.error) {
-      return Promise.reject({ message: payload.error });
-    }
+    if (payload.error) return Promise.reject({ message: payload.error });
     return payload.data;
   } catch (error) {
-    if (error.name !== "AbortError") {
-      console.error(error.stack);
-      throw error;
-    }
+    if (error.name !== "AbortError") throw error;
     return Promise.resolve(onCancel);
   }
 }
 
-/**
- * Retrieves all existing reservations.
- * @param params
- *  the query parameters to be sent to the API.
- * @param signal
- *  optional AbortSignal to cancel the request.
- * @returns {Promise<[reservation]>}
- *  a promise that resolves to a possibly empty array of reservations saved in the database.
- */
+// API function to list reservations based on query parameters
 export async function listReservations(params, signal) {
   const url = new URL(`${API_BASE_URL}/reservations`);
   Object.entries(params).forEach(([key, value]) =>
@@ -71,15 +35,7 @@ export async function listReservations(params, signal) {
     .then(formatReservationTime);
 }
 
-/**
- * Creates a new reservation.
- * @param reservation
- *  the reservation data to be saved in the database.
- * @param signal
- *  optional AbortSignal to cancel the request.
- * @returns {Promise<reservation>}
- *  a promise that resolves to the saved reservation data.
- */
+// API function to create a new reservation
 export async function createReservation(reservation, signal) {
   const url = `${API_BASE_URL}/reservations`;
   const options = {
@@ -91,29 +47,13 @@ export async function createReservation(reservation, signal) {
   return await fetchJson(url, options);
 }
 
-/**
- * Fetches a reservation by its ID.
- * @param reservation_id
- *  the reservation ID.
- * @param signal
- *  optional AbortSignal to cancel the request.
- * @returns {Promise<reservation>}
- *  a promise that resolves to the saved reservation data.
- */
+// API function to read a specific reservation by ID
 export async function readReservation(reservation_id, signal) {
   const url = `${API_BASE_URL}/reservations/${reservation_id}`;
   return await fetchJson(url, { headers, signal }, {});
 }
 
-/**
- * Updates an existing reservation.
- * @param reservation
- *  the reservation data to be updated in the database.
- * @param signal
- *  optional AbortSignal to cancel the request.
- * @returns {Promise<reservation>}
- *  a promise that resolves to the updated reservation data.
- */
+// API function to update an existing reservation
 export async function updateReservation(reservation, signal) {
   const url = `${API_BASE_URL}/reservations/${reservation.reservation_id}`;
   const options = {
@@ -125,17 +65,7 @@ export async function updateReservation(reservation, signal) {
   return await fetchJson(url, options);
 }
 
-/**
- * Updates the status of an existing reservation.
- * @param reservation_id
- *  the reservation ID.
- * @param status
- *  the new status for the reservation (e.g., "booked", "seated", "finished", "cancelled").
- * @param signal
- *  optional AbortSignal to cancel the request.
- * @returns {Promise<reservation>}
- *  a promise that resolves to the updated reservation data.
- */
+// API function to update the status of an existing reservation
 export async function updateReservationStatus(reservation_id, status, signal) {
   const url = `${API_BASE_URL}/reservations/${reservation_id}/status`;
   const options = {
@@ -147,27 +77,13 @@ export async function updateReservationStatus(reservation_id, status, signal) {
   return await fetchJson(url, options);
 }
 
-/**
- * Retrieves all existing tables.
- * @param signal
- *  optional AbortSignal to cancel the request.
- * @returns {Promise<[table]>}
- *  a promise that resolves to a possibly empty array of tables saved in the database.
- */
+// API function to list all tables
 export async function listTables(signal) {
   const url = `${API_BASE_URL}/tables`;
   return await fetchJson(url, { headers, signal }, []);
 }
 
-/**
- * Creates a new table.
- * @param table
- *  the table data to be saved in the database.
- * @param signal
- *  optional AbortSignal to cancel the request.
- * @returns {Promise<table>}
- *  a promise that resolves to the saved table data.
- */
+// API function to create a new table
 export async function createTable(table, signal) {
   const url = `${API_BASE_URL}/tables`;
   const options = {
@@ -179,17 +95,7 @@ export async function createTable(table, signal) {
   return await fetchJson(url, options);
 }
 
-/**
- * Seats a reservation at a specific table.
- * @param table_id
- *  the table ID.
- * @param reservation_id
- *  the reservation ID.
- * @param signal
- *  optional AbortSignal to cancel the request.
- * @returns {Promise<table>}
- *  a promise that resolves to the updated table data.
- */
+// API function to seat a reservation at a specific table
 export async function seatReservation(table_id, reservation_id, signal) {
   const url = `${API_BASE_URL}/tables/${table_id}/seat`;
   const options = {
@@ -201,30 +107,14 @@ export async function seatReservation(table_id, reservation_id, signal) {
   return await fetchJson(url, options);
 }
 
-/**
- * Finishes a table by removing its seated reservation.
- * @param table_id
- *  the table ID.
- * @param signal
- *  optional AbortSignal to cancel the request.
- * @returns {Promise<void>}
- *  a promise that resolves when the table is cleared.
- */
+// API function to finish a table and free it up
 export async function finishTable(table_id, signal) {
   const url = `${API_BASE_URL}/tables/${table_id}/seat`;
   const options = { method: "DELETE", headers, signal };
   return await fetchJson(url, options);
 }
 
-/**
- * Searches for reservations by mobile number.
- * @param mobile_number
- *  the mobile number to search for.
- * @param signal
- *  optional AbortSignal to cancel the request.
- * @returns {Promise<[reservation]>}
- *  a promise that resolves to a possibly empty array of reservations matching the mobile number.
- */
+// API function to search for reservations by phone number
 export async function searchReservations(mobile_number, signal) {
   const url = new URL(`${API_BASE_URL}/reservations`);
   url.searchParams.append("mobile_number", mobile_number);

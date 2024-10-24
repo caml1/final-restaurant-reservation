@@ -21,15 +21,21 @@ function EditReservation() {
     return () => abortController.abort();
   }, [reservation_id]);
 
-  const handleSubmit = (updatedReservation) => {
-    const abortController = new AbortController();
-    setError(null);
+  const handleSubmit = async (updatedReservation) => {
+    const today = new Date();
+    const selectedDate = new Date(`${updatedReservation.reservation_date}T${updatedReservation.reservation_time}`);
 
-    updateReservation(updatedReservation, abortController.signal)
-      .then(() => history.push(`/dashboard`))
-      .catch(setError);
+    if (selectedDate < today) {
+      setError({ message: "Reservation date must be in the future." });
+      return;
+    }
 
-    return () => abortController.abort();
+    try {
+      await updateReservation(updatedReservation);
+      history.push(`/dashboard`);
+    } catch (error) {
+      setError(error);
+    }
   };
 
   if (!reservation) {
