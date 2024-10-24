@@ -52,13 +52,70 @@ function hasRequiredFields(req, res, next) {
   next();
 }
 
-// Middleware to validate reservation status
+// Middleware to validate reservation date (must be in the future, and the restaurant is closed on Tuesdays)
+function isReservationDateValid(req, res, next) {
+  const { reservation_date } = req.body.data;
+  const reservationDate = new Date(`${reservation_date}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Compare dates without considering time
+
+  if (reservationDate < today) {
+    return next({
+      status: 400,
+      message: "Reservation date must be in the future.",
+    });
+  }
+
+  if (reservationDate.getUTCDay() === 2) {
+    return next({
+      status: 400,
+      message: "The restaurant is closed on Tuesdays.",
+    });
+  }
+
+  next();
+}
+
+// Middleware to validate reservation time (must be within business hours)
+function hasValidTime(req, res, next) {
+  const { reservation_time } = req.body.data;
+  const [hour, minute] = reservation_time.split(":").map(Number);
+
+  if (hour < 10 || hour > 21 || (hour === 21 && minute > 30)) {
+    return next({
+      status: 400,
+      message: "Reservation time must be between 10:00 AM and 9:30 PM.",
+    });
+  }
+
+  next();
+}
+
+// Middleware to validate reservation status during creation
+function isStatusValidForCreate(req, res, next) {
+  const { status } = req.body.data;
+
+  // Only "booked" status is allowed during creation
+  if (status && status !== "booked") {
+    return next({
+      status: 400,
+      message: `Invalid status '${status}' during creation. Only 'booked' is allowed.`,
+    });
+  }
+
+  next();
+}
+
+// Middleware to validate reservation status update
 function validStatus(req, res, next) {
   const { status } = req.body.data;
   const validStatuses = ["booked", "seated", "finished", "cancelled"];
-  
+
   if (!validStatuses.includes(status)) {
-    return next({ status: 400, message: `Invalid status: ${status}` });
+    return next({
+      status: 400,
+      message: `Invalid status: ${status}. Status must be one of 'booked', 'seated', 'finished', or 'cancelled'.`,
+    });
   }
 
   next();
@@ -98,8 +155,8 @@ async function updateStatus(req, res, next) {
     });
   }
 
-  const data = await service.updateStatus(reservation_id, status);
-  res.json({ data });
+  const updatedReservation = await service.updateStatus(reservation_id, status);
+  res.status(200).json({ data: updatedReservation });
 }
 
 // List reservations by date or mobile number (for search functionality)
@@ -117,9 +174,25 @@ async function list(req, res) {
 }
 
 module.exports = {
-  create: [hasRequiredFields, asyncErrorBoundary(create)],
+  create: [
+    hasRequiredFields,
+    isReservationDateValid,
+    hasValidTime,
+    isStatusValidForCreate,
+    asyncErrorBoundary(create),
+  ],
   read: [asyncErrorBoundary(reservationExists), read],
-  update: [asyncErrorBoundary(reservationExists), hasRequiredFields, asyncErrorBoundary(update)],
-  updateStatus: [asyncErrorBoundary(reservationExists), validStatus, asyncErrorBoundary(updateStatus)],
+  update: [
+    asyncErrorBoundary(reservationExists),
+    hasRequiredFields,
+    isReservationDateValid,
+    hasValidTime,
+    asyncErrorBoundary(update),
+  ],
+  updateStatus: [
+    asyncErrorBoundary(reservationExists),
+    validStatus,
+    asyncErrorBoundary(updateStatus),
+  ],
   list: asyncErrorBoundary(list),
 };
