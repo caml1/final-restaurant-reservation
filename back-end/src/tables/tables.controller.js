@@ -63,6 +63,14 @@ async function seatReservation(req, res, next) {
     });
   }
 
+  // Check if the reservation is already seated
+  if (reservation.status === "seated") {
+    return next({
+      status: 400,
+      message: "Reservation is already seated.",
+    });
+  }
+
   if (table.capacity < reservation.people) {
     return next({
       status: 400,
