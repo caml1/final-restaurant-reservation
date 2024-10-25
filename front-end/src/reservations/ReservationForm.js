@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 
 /**
  * Reservation form component for both creating and editing a reservation.
@@ -7,31 +7,31 @@ import React, { useState } from "react";
  *  handleSubmit: function to handle form submission.
  *  handleCancel: function to handle canceling the form.
  */
-function ReservationForm({ formData, handleSubmit, handleCancel }) {
-  const [reservation, setReservation] = useState({ ...formData });
+function ReservationForm({ formData, handleChange, handleSubmit, handleCancel }) {
+  // const [reservation, setReservation] = useState({ ...formData });
 
-  const handleChange = ({ target }) => {
-    const { name, value } = target;
-    setReservation((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
-  };
+  // const handleChange = ({ target }) => {
+  //   const { name, value } = target;
+  //   setReservation((previous) => ({
+  //     ...previous,
+  //     [name]: value,
+  //   }));
+  // };
 
-  const onSubmit = (event) => {
-    event.preventDefault();
-    handleSubmit(reservation);
-  };
+  // const onSubmit = (event) => {
+  //   event.preventDefault();
+  //   handleSubmit(reservation);
+  // };
 
   return (
-    <form onSubmit={onSubmit}>
+    <form onSubmit={handleSubmit}>
       <div>
         <label htmlFor="first_name">First Name</label>
         <input
           id="first_name"
           name="first_name"
           type="text"
-          value={reservation.first_name}
+          value={formData.first_name}
           onChange={handleChange}
           required
         />
@@ -42,7 +42,7 @@ function ReservationForm({ formData, handleSubmit, handleCancel }) {
           id="last_name"
           name="last_name"
           type="text"
-          value={reservation.last_name}
+          value={formData.last_name}
           onChange={handleChange}
           required
         />
@@ -53,7 +53,7 @@ function ReservationForm({ formData, handleSubmit, handleCancel }) {
           id="mobile_number"
           name="mobile_number"
           type="text"
-          value={reservation.mobile_number}
+          value={formData.mobile_number}
           onChange={handleChange}
           required
         />
@@ -64,7 +64,7 @@ function ReservationForm({ formData, handleSubmit, handleCancel }) {
           id="reservation_date"
           name="reservation_date"
           type="date"
-          value={reservation.reservation_date}
+          value={formData.reservation_date}
           onChange={handleChange}
           required
         />
@@ -75,7 +75,7 @@ function ReservationForm({ formData, handleSubmit, handleCancel }) {
           id="reservation_time"
           name="reservation_time"
           type="time"
-          value={reservation.reservation_time}
+          value={formData.reservation_time}
           onChange={handleChange}
           required
         />
@@ -86,7 +86,7 @@ function ReservationForm({ formData, handleSubmit, handleCancel }) {
           id="people"
           name="people"
           type="number"
-          value={reservation.people}
+          value={formData.people}
           onChange={handleChange}
           required
           min="1"

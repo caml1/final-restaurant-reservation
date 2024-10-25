@@ -49,6 +49,7 @@ export async function createReservation(reservation, signal) {
 
 // API function to read a specific reservation by ID
 export async function readReservation(reservation_id, signal) {
+  console.log("READRESERVETION")
   const url = `${API_BASE_URL}/reservations/${reservation_id}`;
   return await fetchJson(url, { headers, signal }, {});
 }

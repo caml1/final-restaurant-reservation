@@ -19,6 +19,7 @@ function Dashboard({ date }) {
   useEffect(loadDashboard, [date]);
 
   function loadDashboard() {
+    console.log("callled loadDashboard");
     const abortController = new AbortController();
     setReservationsError(null);
     setTablesError(null);
@@ -56,6 +57,7 @@ function Dashboard({ date }) {
       <div>
         <h3>Reservations</h3>
         <ul>
+          {console.log(reservations)}
           {reservations.map((reservation) => (
             <li key={reservation.reservation_id}>
               {reservation.first_name} {reservation.last_name} -{" "}

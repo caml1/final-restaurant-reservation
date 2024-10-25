@@ -3,6 +3,7 @@ const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
 
 // Middleware to check if reservation exists
 async function reservationExists(req, res, next) {
+  console.log("RESERVATIONEXISTS")
   const { reservation_id } = req.params;
   const reservation = await service.read(reservation_id);
 
@@ -15,6 +16,7 @@ async function reservationExists(req, res, next) {
 
 // Middleware to validate required fields
 function hasRequiredFields(req, res, next) {
+  console.log("HASREQUIREDFIELDS")
   const { data = {} } = req.body;
   const requiredFields = ["first_name", "last_name", "mobile_number", "reservation_date", "reservation_time", "people"];
 
@@ -54,6 +56,7 @@ function hasRequiredFields(req, res, next) {
 
 // Middleware to validate reservation date (must be in the future, and the restaurant is closed on Tuesdays)
 function isReservationDateValid(req, res, next) {
+  console.log("ISRESERVATIONDATEVALID")
   const { reservation_date } = req.body.data;
   const reservationDate = new Date(`${reservation_date}T00:00:00`);
   const today = new Date();
@@ -78,6 +81,7 @@ function isReservationDateValid(req, res, next) {
 
 // Middleware to validate reservation time (must be within business hours)
 function hasValidTime(req, res, next) {
+  console.log("HASVALIDTIME")
   const { reservation_time } = req.body.data;
   if (!/^\d{2}:\d{2}$/.test(reservation_time)) {
     return next({
@@ -143,6 +147,7 @@ async function read(req, res) {
 
 // Update an existing reservation
 async function update(req, res) {
+  console.log("UPDATE")
   const updatedReservation = {
     ...req.body.data,
     reservation_id: res.locals.reservation.reservation_id,
