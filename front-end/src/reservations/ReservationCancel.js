@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 
 //import components
-import ErrorAlert from '../layout/ErrorAlert.js';
+import ErrorAlert from '../layout/ErrorAlert';
 
 //import utility functions
 import {cancelReservation} from "../utils/api.js";

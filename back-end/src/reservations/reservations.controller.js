@@ -95,30 +95,9 @@ function validDateFormat(req, res, next){
     next();
 }
 
-function isReservationDateValid(req, res, next) {
-  const { reservation_date } = req.body.data;
-  const reservationDate = new Date(`${reservation_date}T00:00:00`);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Compare dates without considering time
-
-  if (reservationDate < today) {
-    return next({
-      status: 400,
-      message: "Reservation date must be in the future.",
-    });
-  }
-
-  if (reservationDate.getUTCDay() === 2) {
-    return next({
-      status: 400,
-      message: "The restaurant is closed on Tuesdays.",
-    });
-  }
-
-  next();
-}
-
  
+//validate reservation's timeframe
+
 function reservationTimeFrameValidation(req, res, next){
   const { reservation_date, reservation_time } = req.body.data;
 
@@ -133,6 +112,8 @@ function reservationTimeFrameValidation(req, res, next){
     date.getUTCSeconds()
   );
 
+
+  //reservation is not for a tuesday
   const resDay = date.getDay();
 
   if (resDay === 2) {
@@ -142,12 +123,16 @@ function reservationTimeFrameValidation(req, res, next){
     });
   }
 
+  //reservation is not for a day or time in the past
+
   if (Date.parse(dateUTC) <= Date.now()) {
     return next({
       status: 400,
       message: "Reservation must be for a future date/time",
     });
   }
+
+  //reservation is not outside of restaurant's open hours
 
   if (
     date.getHours() < 10 ||
@@ -172,6 +157,8 @@ function reservationTimeFrameValidation(req, res, next){
 }
 
 
+//validate that reservation exists
+
 async function reservationExists(req, res, next){
 
   const reservation = await service.read(req.params.reservation_id);
@@ -182,6 +169,31 @@ async function reservationExists(req, res, next){
   }
   next({ status: 404, message: `Reservation ${req.params.reservation_id}  cannot be found` });
 }
+
+function isReservationDateValid(req, res, next) {
+  const { reservation_date } = req.body.data;
+  const reservationDate = new Date(`${reservation_date}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Compare dates without considering time
+
+  if (reservationDate < today) {
+    return next({
+      status: 400,
+      message: "Reservation date must be in the future.",
+    });
+  }
+
+  if (reservationDate.getUTCDay() === 2) {
+    return next({
+      status: 400,
+      message: "The restaurant is closed on Tuesdays.",
+    });
+  }
+
+  next();
+}
+
+//validate the status of reservation
 
 
 const validStatusValues =[
@@ -201,6 +213,8 @@ function validStatus(req, res, next){
   next()
 }
 
+//validate that reservation is not finished (a finished reservation cannot be updated)
+
 function notFinished(req, res, next){
 
   const {status} = res.locals.reservation;
@@ -214,6 +228,8 @@ function notFinished(req, res, next){
   next()
 }
 
+//validate that reservation has booked status
+
 function bookedStatus(req, res, next){
   const {status} = req.body.data;
 
@@ -226,6 +242,9 @@ function bookedStatus(req, res, next){
   next();
 }
 
+//CRUDL functions
+
+//create new reservation
 
 async function create(req, res){
 
@@ -237,11 +256,15 @@ async function create(req, res){
   })
 }
 
+// get a single reservation
+
 function read(req, res){
   
   res.json({data: res.locals.reservation})
 }
 
+
+//update reservation
 
 async function update(req, res, next){
   
@@ -254,6 +277,9 @@ async function update(req, res, next){
   const data = await service.update(updatedReservation);
   res.json({data})
 }
+
+
+//update reservation status
 
 async function updateStatus(req, res, next) {
 
@@ -268,6 +294,9 @@ async function updateStatus(req, res, next) {
   const data = await service.updateStatus(updatedReservation);
   res.json({ data });
 }
+
+
+//list reservations for a date, a mobile number
 
 async function list(req, res) {
 
@@ -290,9 +319,9 @@ async function list(req, res) {
 module.exports = {
   create: [
     hasData,
+    isReservationDateValid,
     hasRequiredProperties,
     validNumberOfPeople,
-    isReservationDateValid,
     peopleIsNumber,
     validDateFormat,
     validTimeFormat,

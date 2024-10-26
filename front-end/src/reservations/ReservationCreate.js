@@ -9,7 +9,7 @@ import { formatAsDate } from "../utils/date-time";
 import ErrorAlert from "../layout/ErrorAlert";
 import ReservationForm from './ReservationForm';
 
-const NewReservation = () => {
+const ReservationCreate = () => {
 
     const history = useHistory();
 
@@ -75,4 +75,4 @@ const NewReservation = () => {
   );
 }
 
-export default NewReservation
+export default ReservationCreate

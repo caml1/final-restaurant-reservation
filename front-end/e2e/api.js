@@ -78,7 +78,7 @@ async function createTable(table, signal) {
   return await fetchJson(url, options, table);
 }
 
-async function ReservationSeat(reservation_id, table_id) {
+async function seatReservation(reservation_id, table_id) {
   const url = `${API_BASE_URL}/tables/${table_id}/seat`;
   const options = {
     method: "PUT",
@@ -91,5 +91,5 @@ async function ReservationSeat(reservation_id, table_id) {
 module.exports = {
   createReservation,
   createTable,
-  ReservationSeat,
+  seatReservation,
 };

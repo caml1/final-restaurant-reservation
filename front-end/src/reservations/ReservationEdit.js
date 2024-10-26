@@ -11,7 +11,7 @@ import {formatAsDate} from '../utils/date-time';
 import ReservationForm from './ReservationForm';
 import ErrorAlert from '../layout/ErrorAlert';
 
-const EditReservation = () => {
+const ReservationEdit = () => {
 
   const history = useHistory();
 
@@ -95,4 +95,4 @@ const cancelHandler = ()=>{
  return "Loading..."
 }
 
-export default EditReservation
+export default ReservationEdit
