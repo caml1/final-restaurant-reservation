@@ -1,65 +1,113 @@
 import React, { useState, useEffect } from "react";
-import { listTables, seatReservation } from "../utils/api";
-import { useParams, useHistory } from "react-router-dom";
+import { useParams, useHistory } from "react-router";
+
+//import components
 import ErrorAlert from "../layout/ErrorAlert";
 
-function SeatReservation() {
-  const { reservation_id } = useParams(); // Get reservation ID from the URL
-  const history = useHistory(); // For navigation
-  const [tables, setTables] = useState([]); // List of tables
-  const [selectedTable, setSelectedTable] = useState(""); // Selected table ID
-  const [seatError, setSeatError] = useState(null); // Error handling
+//import utility functions
+import {
+  listTables,
+  seatReservation,
+} from "../utils/api";
 
-  // Fetch available tables when the component loads
+
+const SeatReservation = () => {
+
+  const { reservation_id } = useParams();
+  const history = useHistory();
+
+  const [formData, setFormData] = useState("");
+  const [tables, setTables] = useState([]);
+  const [error, setError] = useState(null);
+
+//load tables
   useEffect(() => {
     const abortController = new AbortController();
-    listTables(abortController.signal)
-      .then(setTables)
-      .catch(setSeatError); // Catch any errors during fetching tables
+    setError(null);
+    listTables(abortController.signal).then(setTables).catch(setError);
     return () => abortController.abort();
-  }, []);
+  }, [reservation_id]);
 
-  // Handle form submission to seat a reservation
-  const handleSubmit = async (event) => {
+
+  const submitHandler = async(event) => {
+
     event.preventDefault();
-    setSeatError(null);
+    setError(null);
 
-    try {
-      // Call API to seat the reservation
-      await seatReservation(selectedTable, reservation_id);
-      history.push("/dashboard"); // Navigate to dashboard after seating
-    } catch (error) {
-      setSeatError(error); // Catch errors like table too small or already occupied
+    const abortController = new AbortController();
+
+    const tableId = Number(formData.table_id);
+    const reservationId = Number(reservation_id);
+
+    try{
+        await seatReservation(tableId, reservationId, abortController.signal);
+        history.push("/");
+    } catch(error){ 
+        if (error.name !== "AbortError") {
+          setError(error);
+        }
     }
+    return () => abortController.abort();  
+  };
+
+
+  const changeHandler = ({ target: { name, value } }) => {
+    setFormData((previousFormData) => ({
+      ...previousFormData,
+      [name]: value,
+    }));
   };
 
   return (
-    <main>
-      <h1>Seat Reservation</h1>
-      {seatError && <ErrorAlert error={seatError} />}
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="table_id">Seat at Table:</label>
-        <select
-          id="table_id"
-          name="table_id"
-          value={selectedTable}
-          onChange={(e) => setSelectedTable(e.target.value)}
-          required
-        >
-          <option value="">--Select a table--</option>
-          {tables.map((table) => (
-            <option key={table.table_id} value={table.table_id}>
-              {table.table_name} - {table.capacity}
-            </option>
-          ))}
-        </select>
-        <button type="submit">Submit</button>
-        <button type="button" onClick={() => history.goBack()}>
-          Cancel
-        </button>
-      </form>
-    </main>
+    <div className="container">
+      <div className="row">
+        <ErrorAlert error={error} />
+      </div>
+      <div className="card mt-3">
+        <div className="card-body">
+          <form onSubmit={submitHandler}>
+            <h2 className="card-title">
+              Seat reservation number {reservation_id}
+            </h2>
+            <div className="card-text mb-3">
+              <label htmlFor="table_id" className="form-label">
+                Table number:
+              </label>
+              <select
+                id="table_id"
+                name="table_id"
+                onChange={changeHandler}
+                value={formData.table_id}
+                className="form-control"
+              >
+                <option value="">Select a table</option>
+                {tables.map((table) => (
+                  <option key={table.table_id} value={table.table_id}>
+                    {table.table_name} - {table.capacity}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button type="submit" className="btn btn-primary card-link">
+              Submit
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary card-link"
+              onClick={() => history.goBack()}
+            >
+              Cancel
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
   );
+  
+
+      
+     
 }
 
-export default SeatReservation;
+export default SeatReservation

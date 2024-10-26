@@ -1,78 +1,78 @@
-import React, { useState, useEffect } from "react";
-import { useHistory } from "react-router-dom";
-import { createReservation } from "../utils/api";
+import React, {useState} from 'react';
+import {useHistory} from "react-router-dom";
+
+//import utility functions
+import {createReservation} from "../utils/api";
+import { formatAsDate } from "../utils/date-time";
+
+//import components
 import ErrorAlert from "../layout/ErrorAlert";
-import ReservationForm from "./ReservationForm";
+import ReservationForm from './ReservationForm';
 
-function NewReservation() {
-  const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
-    mobile_number: "",
-    reservation_date: "",
-    reservation_time: "",
-    people: 1,
-  });
-  
-  const [reservationError, setReservationError] = useState(null);
-  const history = useHistory();
+const NewReservation = () => {
 
-  useEffect(()=> {
-    return formData
-  }, [formData]);
+    const history = useHistory();
 
-  const handleChange = (event) => {
-    if (event.target.name === "people") {
-      setFormData({
-        ...formData,
-        [event.target.name]: Number(event.target.value),
-      });
-    } else {
-      setFormData({
-        ...formData, 
-        [event.target.name]: event.target.value,
-      });
-    }
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setReservationError(null);
-
-    const today = new Date();
-    const selectedDate = new Date(`${formData.reservation_date}T${formData.reservation_time}`);
-
-    if (selectedDate < today) {
-      setReservationError({ message: "Reservation date must be in the future." });
-      return;
+    const initialFormState ={
+        first_name: "",
+        last_name: "",
+        mobile_number: "",
+        reservation_date: "",
+        reservation_time: "",
+        people: "",
     }
 
-    try {
-      await createReservation(formData); 
-      history.push(`/dashboard?date=${formData.reservation_date}`);
-    } catch (error) {
-      setReservationError(error);
+    const [reservation, setReservation] = useState({...initialFormState});
+    const [error, setError] = useState(null);
+
+
+    const cancelHandler = () =>{
+        history.goBack();
     }
-  };
+
+    const submitHandler = async(event) => {
+
+        event.preventDefault();
+        setError(null);
+      
+        const abortController = new AbortController();
+        reservation.people = Number(reservation.people);
+        
+        try{
+          const response = await createReservation(reservation, abortController.signal);         
+          history.push(
+            `/dashboard?date=${formatAsDate(response.reservation_date)}`
+          );
+        }
+        catch(error){
+          
+           if (error.name !== "AbortError") {
+             setError(error);
+           }         
+        }
+        return ()=> abortController.abort();
+              
+    }
+
+    const changeHandler = ({target: {name, value}}) => {
+        setReservation((previousReservation) =>({
+            ...previousReservation,
+            [name]: value,
+        }))
+    }
 
   return (
-    <main>
-      <h1>Create New Reservation</h1>
-      
-      {reservationError && (
-        <div className="alert alert-danger">
-          <ErrorAlert error={reservationError} />
-        </div>
-      )}
-
+    <>
+      <h2 className="mb-3 pt-3">Create Reservation</h2>
+      <ErrorAlert error={error} />
       <ReservationForm
-        formData={formData}
-        handleChange={handleChange}
-        handleSubmit={handleSubmit}
-        handleCancel={() => history.goBack()}
+        reservation={reservation}
+        submitHandler={submitHandler}
+        changeHandler={changeHandler}
+        cancelHandler={cancelHandler}
       />
-    </main>
+    </>
   );
 }
 
-export default NewReservation;
+export default NewReservation

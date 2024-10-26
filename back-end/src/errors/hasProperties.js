@@ -1,17 +1,19 @@
-function hasProperties(...properties) {
-    return function (req, res, next) {
-      const { data = {} } = req.body;
-      
-      for (let property of properties) {
-        if (!data[property]) {
-          return next({
-            status: 400,
-            message: `A '${property}' field is required.`,
+function hasProperties(properties) {
+  return function(req, res, next) {
+      const {data ={}} = req.body;
+
+      try{
+          properties.forEach((property) =>{
+              if(!data[property]){
+                  const error = new Error(`A '${property}' is required.`);
+                  error.status = 400;
+                  throw error;
+              }
           });
-        }
+          next();
+      } catch(error){
+          next(error);
       }
-      next();
-    };
   }
-  
-  module.exports = hasProperties;
+}
+module.exports = hasProperties;
