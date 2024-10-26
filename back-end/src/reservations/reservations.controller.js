@@ -95,6 +95,30 @@ function validDateFormat(req, res, next){
     next();
 }
 
+function isReservationDateValid(req, res, next) {
+  console.log("ISRESERVATIONDATEVALID")
+  const { reservation_date } = req.body.data;
+  const reservationDate = new Date(`${reservation_date}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Compare dates without considering time
+
+  if (reservationDate < today) {
+    return next({
+      status: 400,
+      message: "Reservation date must be in the future.",
+    });
+  }
+
+  if (reservationDate.getUTCDay() === 2) {
+    return next({
+      status: 400,
+      message: "The restaurant is closed on Tuesdays.",
+    });
+  }
+
+  next();
+}
+
  
 function reservationTimeFrameValidation(req, res, next){
   const { reservation_date, reservation_time } = req.body.data;
@@ -269,6 +293,7 @@ module.exports = {
     hasData,
     hasRequiredProperties,
     validNumberOfPeople,
+    isReservationDateValid,
     peopleIsNumber,
     validDateFormat,
     validTimeFormat,
