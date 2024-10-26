@@ -96,7 +96,6 @@ function validDateFormat(req, res, next){
 }
 
 function isReservationDateValid(req, res, next) {
-  console.log("ISRESERVATIONDATEVALID")
   const { reservation_date } = req.body.data;
   const reservationDate = new Date(`${reservation_date}T00:00:00`);
   const today = new Date();

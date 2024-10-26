@@ -11,7 +11,7 @@ import {
 } from "../utils/api";
 
 
-const SeatReservation = () => {
+const ReservationSeat = () => {
 
   const { reservation_id } = useParams();
   const history = useHistory();
@@ -110,4 +110,4 @@ const SeatReservation = () => {
      
 }
 
-export default SeatReservation
+export default ReservationSeat
