@@ -1,51 +1,45 @@
 import React from "react";
 import { Redirect, Route, Switch } from "react-router-dom";
-
-//import components
 import Dashboard from "../dashboard/Dashboard";
-import ReservationCreate from "../reservations/ReservationCreate";
-import ReservationSeat from "../reservations/ReservationSeat";
-import ReservationSearch from "../reservations/ReservationSearch";
-import ReservationEdit from "../reservations/ReservationEdit";
-import TableCreate  from "../tables/TableCreate";
+import CreateReservations from "../reservations/CreateReservation";
+import SeatReservation from "../reservations/SeatReservations";
+import CreateTable from "../tables/CreateTable";
 import NotFound from "./NotFound";
-
-//import utility functions
 import { today } from "../utils/date-time";
+import useQuery from "../utils/useQuery";
+import Search from "../search/Search";
+import EditReservations from "./EditReservation";
+// import EditReservations from "../reservations/EditReservation";
 
-/**
- * Defines all the routes for the application.
- *
- * You will need to make changes to this file.
- *
- * @returns {JSX.Element}
- */
 function Routes() {
+  const query = useQuery();
+  const date = query.get("date");
+
   return (
     <Switch>
       <Route exact={true} path="/">
         <Redirect to={"/dashboard"} />
       </Route>
+      <Route path="/search">
+        <Search />
+      </Route>
+      <Route path="/tables/new">
+        <CreateTable />
+      </Route>
+      <Route path="/reservations/:reservation_id/edit">
+        <EditReservations />
+      </Route>
+      <Route path="/reservations/:reservation_id/seat">
+        <SeatReservation />
+      </Route>
+      <Route path="/reservations/new">
+        <CreateReservations />
+      </Route>
       <Route exact={true} path="/reservations">
         <Redirect to={"/dashboard"} />
       </Route>
       <Route path="/dashboard">
-        <Dashboard date={today()} />
-      </Route>
-      <Route path="/reservations/new">
-        <ReservationCreate />
-      </Route>
-      <Route path="/reservations/:reservation_id/edit">
-        <ReservationEdit />
-      </Route>
-      <Route path="/reservations/:reservation_id/seat">
-        <ReservationSeat />
-      </Route>
-      <Route path="/tables/new">
-        <TableCreate />
-      </Route>
-      <Route path="/search">
-        <ReservationSearch />
+        <Dashboard date={date ? date : today()} />
       </Route>
       <Route>
         <NotFound />

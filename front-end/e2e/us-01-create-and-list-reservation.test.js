@@ -47,9 +47,10 @@ describe("US-01 - Create and list reservations - E2E", () => {
         fullPage: true,
       });
 
+      console.log(lastName);
       await Promise.all([
         page.click("[type=submit]"),
-        page.waitForNavigation({ waitUntil: "networkidle0" }),
+        page.waitForNavigation({ waitUntil: "networkidle0", timeout: 30000 }), // wait up to 30 seconds
       ]);
 
       await page.screenshot({
@@ -57,8 +58,6 @@ describe("US-01 - Create and list reservations - E2E", () => {
         fullPage: true,
       });
 
-      console.log(lastName);
-      console.log()
       await expect(page).toMatch(lastName);
     });
 
